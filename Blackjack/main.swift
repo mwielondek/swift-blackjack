@@ -6,13 +6,13 @@
 //  Copyright © 2020 Seeking Clarity. All rights reserved.
 //
 
-protocol CanPlay: HasCards {
+protocol CanPlay: HasCards, CustomStringConvertible {
     var name: String { get }
     var cash: Double { get set }
 }
 
-protocol HasCards {
-    var cards: [Card] { get set }
+protocol HasCards: AnyObject {
+    var cards: Cards { get set }
     func calcTotalPointsOnHand() -> Int
 }
 
@@ -21,29 +21,61 @@ extension HasCards {
         // FIXME
         cards.map { $0.rank.rawValue }.reduce(.zero, +)
     }
+    
+    func isFat() -> Bool {
+        calcTotalPointsOnHand() > 21
+    }
+    
+    func receive(cards: [Card]) {
+        self.cards.append(contentsOf: cards)
+    }
 }
 
-struct Player: CanPlay {
+extension CanPlay {
+    var description: String {
+        return "\(name) (holds \(cards.count) cards)"
+    }
+}
+
+class Player: CanPlay {
     var name: String = "Player"
     var cash: Double = 100
-    var cards: [Card] = []
+    var cards: Cards = []
 }
 
-struct Dealer: CanPlay {
+@propertyWrapper
+struct InfiniteDeck {
+    var deck: Cards = []
+    var wrappedValue: Cards {
+        mutating get {
+            if deck.isEmpty {
+                deck = Game.createNewDeck()
+            }
+            return deck
+        }
+        set {
+            deck = newValue
+        }
+    }
+}
+
+class Dealer: CanPlay {
     var name: String = "The house"
     var cash: Double = 10000
-    var cards: [Card] = {
-        // FIXME
-        var arr = [Card]()
-        for suit in Card.Suit {
-            for rank in Card.Rank.Type {
-                let c = Card(rank: rank, suit: suit)
-                arr.append(c)
-            }
-        }
-        return arr
-    }()
+    var cards: Cards = []
+    @InfiniteDeck var deck: Cards
     
+    init() {}
+    
+    func deal(_ amount: Int, to player: HasCards) {
+        print("* Dealing \(amount) cards to \(player)")
+        player.receive(cards: Array(deck.prefix(upTo: amount)))
+        deck.removeFirst(amount)
+    }
+    
+    func draw(_ amount: Int) {
+        deal(amount, to: self)
+    }
     
 }
 
@@ -65,6 +97,8 @@ struct Card {
     }
 }
 
+typealias Cards = [Card]
+
 class Game {
     let p1 = Player()
     let house = Dealer()
@@ -78,6 +112,17 @@ class Game {
         
     }
     
+    static func createNewDeck() -> Cards {
+        var arr = [Card]()
+        for suit in Card.Suit.allCases {
+            for rank in Card.Rank.allCases {
+                let c = Card(rank: rank, suit: suit)
+                arr.append(c)
+            }
+        }
+        return arr
+    }
+    
     func play() {
         // players draw two cards
         // house draws two cards
@@ -85,13 +130,18 @@ class Game {
         // house draws until stopping cond.
         house.deal(2, to: p1)
         house.draw(2) // Implement me!
-        
+
         // implement and TBC...
-        getAction(for: p1)
+        while readAction() == .hit {
+            house.deal(1, to: p1)
+            if p1.isFat() {
+                break
+            }
+        }
         
     }
     
-    func readInput() -> Action {
+    func readAction() -> Action {
         var action: Action?
         
         while action == nil {

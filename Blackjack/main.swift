@@ -22,10 +22,6 @@ extension HasCards {
         cards.map { $0.rank.rawValue }.reduce(.zero, +)
     }
     
-    func isFat() -> Bool {
-        calcTotalPointsOnHand() > 21
-    }
-    
     func receive(cards: [Card]) {
         self.cards.append(contentsOf: cards)
     }
@@ -49,7 +45,7 @@ struct InfiniteDeck {
     var wrappedValue: Cards {
         mutating get {
             if deck.isEmpty {
-                deck = Game.createNewDeck()
+                deck = Game.createNewDeck().shuffled()
             }
             return deck
         }
@@ -67,19 +63,31 @@ class Dealer: CanPlay {
     
     init() {}
     
-    func deal(_ amount: Int, to player: HasCards) {
+    func deal(_ amount: Int, to player: CanPlay) {
         print("* Dealing \(amount) cards to \(player)")
-        player.receive(cards: Array(deck.prefix(upTo: amount)))
+        
+        let drawn = Array(deck.prefix(upTo: amount))
+        player.receive(cards: drawn)
         deck.removeFirst(amount)
+        
+        for card in drawn {
+            print("Got \(card)")
+        }
+        let points = player.calcTotalPointsOnHand()
+        print("\(player.name) now holds cards worth \(points)")
     }
     
-    func draw(_ amount: Int) {
+    func draw(_ amount: Int = 1) {
         deal(amount, to: self)
+    }
+    
+    func reachedStoppingCondition() -> Bool {
+        calcTotalPointsOnHand() >= 17
     }
     
 }
 
-struct Card {
+struct Card: CustomStringConvertible {
     enum Rank: Int, CaseIterable {
         case two = 2, three, four, five, six, seven, eight, nine, ten
         case jack, queen, king, ace
@@ -91,9 +99,16 @@ struct Card {
     let rank: Rank
     let suit: Suit
     
-    func simpleDescription() -> String {
-        let r = String(describing: rank)
-        return "\(suit): \(r)"
+    var description: String {
+        let r = String(describing: rank).capitalized
+        let s = suit.rawValue.capitalized
+        return "\(r) of \(s)"
+    }
+}
+
+extension StringProtocol {
+    var capitalized: String {
+        prefix(1).uppercased() + dropFirst()
     }
 }
 
@@ -108,8 +123,8 @@ class Game {
         case hit, stand
     }
     
-    init() {
-        
+    enum Outcome {
+        case Won(Player), Lost(Player), Draw(Player)
     }
     
     static func createNewDeck() -> Cards {
@@ -124,21 +139,66 @@ class Game {
     }
     
     func play() {
+        
+        
+    }
+    
+    func playRound() -> Outcome {
         // players draw two cards
         // house draws two cards
         // players choose stand or hit
         // house draws until stopping cond.
+        
+        
         house.deal(2, to: p1)
-        house.draw(2) // Implement me!
+        house.draw(2)
 
-        // implement and TBC...
         while readAction() == .hit {
             house.deal(1, to: p1)
-            if p1.isFat() {
+            switch p1.calcTotalPointsOnHand() {
+            case 21...:
+                print("Bust!")
+                handleLostRound(losing: p1)
+                return
+            case 21:
+                print("BLACKJACK!")
+                break
+            default:
                 break
             }
         }
         
+        while !house.reachedStoppingCondition() {
+            house.draw()
+        }
+        
+        // Compare and see who wins
+        let housePoints = house.calcTotalPointsOnHand()
+        let playerPoints = p1.calcTotalPointsOnHand()
+        switch housePoints {
+        case 21...:
+            print("House went bust!")
+            handleWonRound(winning: p1)
+        case playerPoints:
+            handleDraw(drawing: p1)
+        case playerPoints...:
+            handleLostRound(losing: p1)
+        default:
+            fatalError("Weird result!")
+        }
+    }
+    
+    
+    func handleLostRound(losing player: CanPlay) {
+        print("Lost!")
+    }
+    
+    func handleWonRound(winning player: CanPlay) {
+        print("Won!")
+    }
+    
+    func handleDraw(drawing player: CanPlay) {
+        print("Draw!")
     }
     
     func readAction() -> Action {

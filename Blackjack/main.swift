@@ -13,12 +13,11 @@ protocol CanPlay: HasCards, CustomStringConvertible {
 
 protocol HasCards: AnyObject {
     var cards: Cards { get set }
-    func calcTotalPointsOnHand() -> Int
+    var pointsOnHand: Int { get }
 }
 
 extension HasCards {
-    func calcTotalPointsOnHand() -> Int {
-        // FIXME
+    var pointsOnHand: Int {
         cards.map { $0.rank.rawValue }.reduce(.zero, +)
     }
     
@@ -73,7 +72,7 @@ class Dealer: CanPlay {
         for card in drawn {
             print("Got \(card)")
         }
-        let points = player.calcTotalPointsOnHand()
+        let points = player.pointsOnHand
         print("\(player.name) now holds cards worth \(points)")
     }
     
@@ -82,7 +81,7 @@ class Dealer: CanPlay {
     }
     
     func reachedStoppingCondition() -> Bool {
-        calcTotalPointsOnHand() >= 17
+        pointsOnHand >= 17
     }
     
 }
@@ -123,10 +122,6 @@ class Game {
         case hit, stand
     }
     
-    enum Outcome {
-        case Won(Player), Lost(Player), Draw(Player)
-    }
-    
     static func createNewDeck() -> Cards {
         var arr = [Card]()
         for suit in Card.Suit.allCases {
@@ -143,7 +138,7 @@ class Game {
         
     }
     
-    func playRound() -> Outcome {
+    func playRound() {
         // players draw two cards
         // house draws two cards
         // players choose stand or hit
@@ -155,7 +150,7 @@ class Game {
 
         while readAction() == .hit {
             house.deal(1, to: p1)
-            switch p1.calcTotalPointsOnHand() {
+            switch p1.pointsOnHand {
             case 21...:
                 print("Bust!")
                 handleLostRound(losing: p1)
@@ -173,8 +168,8 @@ class Game {
         }
         
         // Compare and see who wins
-        let housePoints = house.calcTotalPointsOnHand()
-        let playerPoints = p1.calcTotalPointsOnHand()
+        let housePoints = house.pointsOnHand
+        let playerPoints = p1.pointsOnHand
         switch housePoints {
         case 21...:
             print("House went bust!")

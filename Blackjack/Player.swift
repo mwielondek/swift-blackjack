@@ -6,9 +6,16 @@
 //  Copyright © 2020 Seeking Clarity. All rights reserved.
 //
 
+//MARK: - Protocols
 protocol CanPlay: HasCards, CustomStringConvertible {
     var name: String { get }
     var cash: Double { get set }
+}
+
+extension CanPlay {
+    var description: String {
+        return "\(name) (holds \(cards.count) cards)"
+    }
 }
 
 protocol HasCards: AnyObject {
@@ -26,32 +33,11 @@ extension HasCards {
     }
 }
 
-extension CanPlay {
-    var description: String {
-        return "\(name) (holds \(cards.count) cards)"
-    }
-}
-
+//MARK: - Players
 class Player: CanPlay {
     var name: String = "Player"
     var cash: Double = 100
     var cards: Cards = []
-}
-
-@propertyWrapper
-struct InfiniteDeck {
-    var deck: Cards = []
-    var wrappedValue: Cards {
-        mutating get {
-            if deck.isEmpty {
-                deck = Game.createNewDeck().shuffled()
-            }
-            return deck
-        }
-        set {
-            deck = newValue
-        }
-    }
 }
 
 class Dealer: CanPlay {
@@ -59,9 +45,15 @@ class Dealer: CanPlay {
     var cash: Double = 10000
     var cards: Cards = []
     @InfiniteDeck var deck: Cards
-    
-    init() {}
-    
+}
+
+extension Dealer {
+    /**
+     Deals cards to player from dealer's deck.
+     - parameters:
+        - amount: number of cards
+        - to: receiving player
+     */
     func deal(_ amount: Int, to player: CanPlay) {
         print("* Dealing \(amount) cards to \(player.name)")
         
@@ -83,10 +75,12 @@ class Dealer: CanPlay {
         print("\(player.name) now holds \(player.cards.count) cards worth \(stringReprOfPoint)")
     }
     
+    /// Deal cards to the dealer.
     func draw(_ amount: Int = 1) {
         deal(amount, to: self)
     }
     
+    /// Should the dealer draw more cards.
     func reachedStoppingCondition() -> Bool {
         guard !cards.isEmpty else { return false }
         if points.valid.isEmpty {
@@ -96,5 +90,21 @@ class Dealer: CanPlay {
             return points.best! >= 17
         }
     }
-    
+}
+
+/// An array of 52 standard playing cards that automatically refills and shuffles when empty.
+@propertyWrapper
+struct InfiniteDeck {
+    var deck: Cards = []
+    var wrappedValue: Cards {
+        mutating get {
+            if deck.isEmpty {
+                deck = Game.createNewDeck().shuffled()
+            }
+            return deck
+        }
+        set {
+            deck = newValue
+        }
+    }
 }

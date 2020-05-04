@@ -6,7 +6,13 @@
 //  Copyright © 2020 Seeking Clarity. All rights reserved.
 //
 
-struct Card: CustomStringConvertible {
+//MARK: - Card
+struct Card {
+    let rank: Rank
+    let suit: Suit
+}
+
+extension Card {
     enum Rank: Int, CaseIterable {
         case two = 2, three, four, five, six, seven, eight, nine, ten
         case jack, queen, king, ace
@@ -14,16 +20,17 @@ struct Card: CustomStringConvertible {
     enum Suit: Character, CaseIterable {
         case spades = "♠", hearts = "♡", diamonds = "♢", clubs = "♣"
     }
-    
-    let rank: Rank
-    let suit: Suit
-    
+}
+
+extension Card: CustomStringConvertible {
     var description: String {
         let r = String(describing: rank).capitalized
         let s = suit.rawValue
         return "\(r) \(s)"
     }
-    
+}
+
+extension Card {
     var pointValue: PointValues {
         let r = rank.rawValue
         switch r {
@@ -39,25 +46,49 @@ struct Card: CustomStringConvertible {
         }
     }
 }
+
+extension StringProtocol {
+    var capitalized: String {
+        prefix(1).uppercased() + dropFirst()
+    }
+}
+
 typealias Cards = [Card]
 
+//MARK: - PointValues
 typealias PointValues = (Int, Int?)
 struct Points {
+    private var pointCombinations: [[Int]]
+    
+    /// All valid point combinations
     var valid: [Int] {
         pointSumCombinations.filter{ $0 <= 21 }.sorted(by: >)
     }
+    /// The best valid point combination
     var best: Int? {
         valid.first
     }
     
+    init(pointsArray: [PointValues]) {
+        pointCombinations = Points.constructCombinations(from: pointsArray)
+    }
+    init() {
+        self.init(pointsArray: [])
+    }
+}
+
+extension Points {
     private var pointSumCombinations: [Int] {
         pointCombinations.reduce([]) {
             // we sum each inner array
             $0 + [$1.reduce(0, +)]
         }
     }
-    private var pointCombinations: [[Int]]
     
+    /**
+    Constructs all possible point counting combinations, given that aces can be counted as 11 or 1.
+     - parameter points: an array of `PointValues`
+     */
     private static func constructCombinations(from points: [PointValues]) -> [[Int]] {
         var combinations = [[Int]]()
         
@@ -74,18 +105,5 @@ struct Points {
             }
         }
         return combinations
-    }
-    
-    init(pointsArray: [PointValues]) {
-        pointCombinations = Points.constructCombinations(from: pointsArray)
-    }
-    init() {
-        self.init(pointsArray: [])
-    }
-}
-
-extension StringProtocol {
-    var capitalized: String {
-        prefix(1).uppercased() + dropFirst()
     }
 }

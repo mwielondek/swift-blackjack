@@ -9,23 +9,9 @@
 class Game {
     let p1 = Player()
     let house = Dealer()
-    
-    
-    enum Action {
-        case hit, stand
-    }
-    
-    static func createNewDeck() -> Cards {
-        var arr = [Card]()
-        for suit in Card.Suit.allCases {
-            for rank in Card.Rank.allCases {
-                let c = Card(rank: rank, suit: suit)
-                arr.append(c)
-            }
-        }
-        return arr
-    }
-    
+}
+
+extension Game {
     func play() {
         playRound()
         
@@ -78,7 +64,7 @@ class Game {
         }
     }
     
-    
+    //MARK: - Handle round
     func handleLostRound(losing player: CanPlay) {
         print("Lost!")
     }
@@ -89,6 +75,25 @@ class Game {
     
     func handleDraw(drawing player: CanPlay) {
         print("Draw!")
+    }
+}
+
+extension Game {
+    //MARK: - Deck
+    static func createNewDeck() -> Cards {
+        var arr = [Card]()
+        for suit in Card.Suit.allCases {
+            for rank in Card.Rank.allCases {
+                let c = Card(rank: rank, suit: suit)
+                arr.append(c)
+            }
+        }
+        return arr
+    }
+    
+    //MARK: - Input/Action
+    enum Action {
+        case hit, stand
     }
     
     func readAction() -> Action {
@@ -112,7 +117,8 @@ class Game {
     }
 }
 
-extension Int {
+//MARK: - Other
+private extension Int {
     enum ComparisonOutcome {
         case equal, greater, less
     }

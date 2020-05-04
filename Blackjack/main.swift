@@ -116,8 +116,15 @@ class Dealer: CanPlay {
         for card in drawn {
             print("Got \(card)")
         }
+        
         let points = player.points.valid
-        print("\(player.name) now holds \(player.cards.count) cards worth \(points)")
+        var stringReprOfPoint: String
+        if points.isEmpty {
+            stringReprOfPoint = "more than 21 points"
+        } else {
+            stringReprOfPoint = points.description
+        }
+        print("\(player.name) now holds \(player.cards.count) cards worth \(stringReprOfPoint)")
     }
     
     func draw(_ amount: Int = 1) {
@@ -238,6 +245,7 @@ class Game {
             switch p1.points.best {
             case 21:
                 print("BLACKJACK!")
+                // TODO check what to do
                 break
             case nil:
                 print("Bust!")

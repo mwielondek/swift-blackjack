@@ -107,3 +107,34 @@ extension Points {
         return combinations
     }
 }
+
+//MARK: - Deck
+extension Game {
+    static func createNewDeck() -> Cards {
+        var arr = [Card]()
+        for suit in Card.Suit.allCases {
+            for rank in Card.Rank.allCases {
+                let c = Card(rank: rank, suit: suit)
+                arr.append(c)
+            }
+        }
+        return arr
+    }
+}
+
+/// An array of 52 standard playing cards that automatically refills and shuffles when empty.
+@propertyWrapper
+struct InfiniteDeck {
+    var deck: Cards = []
+    var wrappedValue: Cards {
+        mutating get {
+            if deck.isEmpty {
+                deck = Game.createNewDeck().shuffled()
+            }
+            return deck
+        }
+        set {
+            deck = newValue
+        }
+    }
+}

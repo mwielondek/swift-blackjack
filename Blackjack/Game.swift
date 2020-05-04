@@ -78,20 +78,8 @@ extension Game {
     }
 }
 
+//MARK: - Input/Action
 extension Game {
-    //MARK: - Deck
-    static func createNewDeck() -> Cards {
-        var arr = [Card]()
-        for suit in Card.Suit.allCases {
-            for rank in Card.Rank.allCases {
-                let c = Card(rank: rank, suit: suit)
-                arr.append(c)
-            }
-        }
-        return arr
-    }
-    
-    //MARK: - Input/Action
     enum Action {
         case hit, stand
     }

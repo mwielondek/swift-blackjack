@@ -8,6 +8,9 @@
 
 /* Begin PBXBuildFile section */
 		35ABEBCB24571C37006F37FA /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = 35ABEBCA24571C37006F37FA /* main.swift */; };
+		35D46DF82460600500981D4A /* Game.swift in Sources */ = {isa = PBXBuildFile; fileRef = 35D46DF72460600500981D4A /* Game.swift */; };
+		35D46DFA2460603E00981D4A /* Card.swift in Sources */ = {isa = PBXBuildFile; fileRef = 35D46DF92460603E00981D4A /* Card.swift */; };
+		35D46DFC2460609B00981D4A /* Player.swift in Sources */ = {isa = PBXBuildFile; fileRef = 35D46DFB2460609B00981D4A /* Player.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -25,6 +28,9 @@
 /* Begin PBXFileReference section */
 		35ABEBC724571C37006F37FA /* Blackjack */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = Blackjack; sourceTree = BUILT_PRODUCTS_DIR; };
 		35ABEBCA24571C37006F37FA /* main.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
+		35D46DF72460600500981D4A /* Game.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Game.swift; sourceTree = "<group>"; };
+		35D46DF92460603E00981D4A /* Card.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Card.swift; sourceTree = "<group>"; };
+		35D46DFB2460609B00981D4A /* Player.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Player.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -58,6 +64,9 @@
 			isa = PBXGroup;
 			children = (
 				35ABEBCA24571C37006F37FA /* main.swift */,
+				35D46DFB2460609B00981D4A /* Player.swift */,
+				35D46DF92460603E00981D4A /* Card.swift */,
+				35D46DF72460600500981D4A /* Game.swift */,
 			);
 			path = Blackjack;
 			sourceTree = "<group>";
@@ -120,7 +129,10 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				35D46DFC2460609B00981D4A /* Player.swift in Sources */,
 				35ABEBCB24571C37006F37FA /* main.swift in Sources */,
+				35D46DFA2460603E00981D4A /* Card.swift in Sources */,
+				35D46DF82460600500981D4A /* Game.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

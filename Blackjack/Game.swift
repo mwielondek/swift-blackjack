@@ -13,17 +13,34 @@ class Game {
 
 extension Game {
     func play() {
-        playRound()
-        
+        // add betting rules here, where running out of
+        // cash would be the stopping cond.
+        while true {
+            print("-- NEW ROUND --")
+            playRound()
+            print("Press any key for new round...")
+            _ = readLine()
+        }
     }
     
     func playRound() {
-        // players draw two cards
-        // house draws two cards
-        // players choose stand or hit
-        // house draws until stopping cond.
+        /*
+         Logic in short:
+          1. players draw two cards
+          2. house draws two cards
+          3. players choose stand or hit
+          4. house draws until stopping condition
+          5. check who won
+        */
+        
+        defer {
+            // Clear the table at the end of turn
+            p1.cards.removeAll()
+            house.cards.removeAll()
+        }
         
         
+        // use an array of players to loop through for multiplayer ver.
         house.deal(2, to: p1)
         house.draw(2)
 

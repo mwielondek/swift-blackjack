@@ -13,12 +13,56 @@ protocol CanPlay: HasCards, CustomStringConvertible {
 
 protocol HasCards: AnyObject {
     var cards: Cards { get set }
-    var pointsOnHand: Int { get }
+}
+
+
+typealias PointValues = (Int, Int?)
+struct Points {
+    var valid: [Int] {
+        pointSumCombinations.filter{ $0 <= 21 }.sorted(by: >)
+    }
+    var best: Int? {
+        valid.first
+    }
+    
+    private var pointSumCombinations: [Int] {
+        pointCombinations.reduce([]) {
+            // we sum each inner array
+            $0 + [$1.reduce(0, +)]
+        }
+    }
+    private var pointCombinations: [[Int]]
+    
+    private static func constructCombinations(from points: [PointValues]) -> [[Int]] {
+        var combinations = [[Int]]()
+        
+        // initial comnbination
+        combinations.append([0])
+        
+        for point in points {
+            for i in combinations.indices {
+                if let secondValue = point.1 {
+                    let newCombination = combinations[i] + [secondValue]
+                    combinations.append(newCombination)
+                }
+                combinations[i] += [point.0]
+            }
+        }
+        return combinations
+    }
+    
+    init(pointsArray: [PointValues]) {
+        pointCombinations = Points.constructCombinations(from: pointsArray)
+    }
+    init() {
+        self.init(pointsArray: [])
+    }
 }
 
 extension HasCards {
-    var pointsOnHand: Int {
-        cards.map { $0.rank.rawValue }.reduce(.zero, +)
+    var points: Points {
+        let pointValues = cards.map { $0.pointValue }
+        return Points(pointsArray: pointValues)
     }
     
     func receive(cards: [Card]) {
@@ -63,7 +107,7 @@ class Dealer: CanPlay {
     init() {}
     
     func deal(_ amount: Int, to player: CanPlay) {
-        print("* Dealing \(amount) cards to \(player)")
+        print("* Dealing \(amount) cards to \(player.name)")
         
         let drawn = Array(deck.prefix(upTo: amount))
         player.receive(cards: drawn)
@@ -72,8 +116,8 @@ class Dealer: CanPlay {
         for card in drawn {
             print("Got \(card)")
         }
-        let points = player.pointsOnHand
-        print("\(player.name) now holds cards worth \(points)")
+        let points = player.points.valid
+        print("\(player.name) now holds \(player.cards.count) cards worth \(points)")
     }
     
     func draw(_ amount: Int = 1) {
@@ -81,18 +125,25 @@ class Dealer: CanPlay {
     }
     
     func reachedStoppingCondition() -> Bool {
-        pointsOnHand >= 17
+        guard !cards.isEmpty else { return false }
+        if points.valid.isEmpty {
+            // has cards on hand, but no valid combinations - bust
+            return true
+        } else {
+            return points.best! >= 17
+        }
     }
     
 }
 
 struct Card: CustomStringConvertible {
+    
     enum Rank: Int, CaseIterable {
         case two = 2, three, four, five, six, seven, eight, nine, ten
         case jack, queen, king, ace
     }
-    enum Suit: String, CaseIterable {
-        case spades, hearts, diamonds, clubs
+    enum Suit: Character, CaseIterable {
+        case spades = "♠", hearts = "♡", diamonds = "♢", clubs = "♣"
     }
     
     let rank: Rank
@@ -100,14 +151,48 @@ struct Card: CustomStringConvertible {
     
     var description: String {
         let r = String(describing: rank).capitalized
-        let s = suit.rawValue.capitalized
-        return "\(r) of \(s)"
+        let s = suit.rawValue
+        return "\(r) \(s)"
+    }
+    
+    var pointValue: PointValues {
+        let r = rank.rawValue
+        switch r {
+        case 14:
+            // ace is worth 10 OR 1
+            return (11, 1)
+        case 11...:
+            // face cards are worth 10
+            return (10, nil)
+        default:
+            // rest is worth pip value
+            return (r, nil)
+        }
     }
 }
 
 extension StringProtocol {
     var capitalized: String {
         prefix(1).uppercased() + dropFirst()
+    }
+}
+
+extension Int {
+    enum ComparisonOutcome {
+        case equal, greater, less
+    }
+    
+    func compare(to otherInt: Int) -> ComparisonOutcome {
+        switch self {
+        case otherInt:
+            return .equal
+        case ...otherInt:
+            return .less
+        case otherInt...:
+            return .greater
+        default:
+            fatalError()
+        }
     }
 }
 
@@ -134,7 +219,7 @@ class Game {
     }
     
     func play() {
-        
+        playRound()
         
     }
     
@@ -150,14 +235,14 @@ class Game {
 
         while readAction() == .hit {
             house.deal(1, to: p1)
-            switch p1.pointsOnHand {
-            case 21...:
-                print("Bust!")
-                handleLostRound(losing: p1)
-                return
+            switch p1.points.best {
             case 21:
                 print("BLACKJACK!")
                 break
+            case nil:
+                print("Bust!")
+                handleLostRound(losing: p1)
+                return
             default:
                 break
             }
@@ -168,18 +253,19 @@ class Game {
         }
         
         // Compare and see who wins
-        let housePoints = house.pointsOnHand
-        let playerPoints = p1.pointsOnHand
-        switch housePoints {
-        case 21...:
-            print("House went bust!")
+        
+        // Check for bust
+        guard let housePoints = house.points.best else { return handleWonRound(winning: p1)}
+        guard let playerPoints = p1.points.best else { return handleLostRound(losing: p1)}
+        
+        // Check other cases
+        switch playerPoints.compare(to: housePoints) {
+        case .greater:
             handleWonRound(winning: p1)
-        case playerPoints:
+        case .equal:
             handleDraw(drawing: p1)
-        case playerPoints...:
+        case .less:
             handleLostRound(losing: p1)
-        default:
-            fatalError("Weird result!")
         }
     }
     

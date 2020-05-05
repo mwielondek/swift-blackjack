@@ -18,7 +18,7 @@ extension Card {
         case jack, queen, king, ace
     }
     enum Suit: Character, CaseIterable {
-        case spades = "♠", hearts = "♡", diamonds = "♢", clubs = "♣"
+        case spades = "♠", hearts = "♥", diamonds = "♦", clubs = "♣"
     }
 }
 
@@ -26,7 +26,7 @@ extension Card: CustomStringConvertible {
     var description: String {
         let r = String(describing: rank).capitalized
         let s = suit.rawValue
-        return "\(r) \(s)"
+        return "\(s) \(r)"
     }
 }
 

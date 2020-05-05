@@ -32,8 +32,8 @@ extension HasCards {
         points.best > 21
     }
     
-    func receive(cards: [Card]) {
-        self.cards.append(contentsOf: cards)
+    func receive(card: Card) {
+        self.cards.append(card)
     }
 }
 
@@ -61,12 +61,13 @@ extension Dealer {
     func deal(_ amount: Int, to player: CanPlay) {
         print("* Dealing \(amount) cards to \(player.name)")
         
-        let drawn = Array(deck.prefix(upTo: amount))
-        player.receive(cards: drawn)
-        deck.removeFirst(amount)
-        
-        for card in drawn {
-            print("Got \(card)")
+        // note: we must use deck.popLast instead of eg prefix for
+        // the infinite dock not to run risk of potentially producing
+        // an index out of range error.
+        for _ in 0..<amount {
+            let drawnCard = deck.popLast()!
+            player.receive(card: drawnCard)
+            print("Got \(drawnCard)")
         }
         
         let points = player.points.valid

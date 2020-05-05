@@ -64,9 +64,15 @@ struct Points {
     var valid: [Int] {
         pointSumCombinations.filter{ $0 <= 21 }.sorted(by: >)
     }
-    /// The best valid point combination
-    var best: Int? {
-        valid.first
+    /// The best valid point combination. If none exists returns the combination closest to 21.
+    var best: Int {
+        if let bestValid = valid.first {
+            return bestValid
+        }
+        // the smallest combination will be closest to 21, since
+        // if there exist no valid combinations, this means that
+        // all combinations are >21 (or that player holds no cards).
+        return pointSumCombinations.sorted(by: <).first ?? 0
     }
     
     init(pointsArray: [PointValues]) {

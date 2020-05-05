@@ -28,6 +28,10 @@ extension HasCards {
         return Points(pointsArray: pointValues)
     }
     
+    var isBust: Bool {
+        points.best > 21
+    }
+    
     func receive(cards: [Card]) {
         self.cards.append(contentsOf: cards)
     }
@@ -68,7 +72,7 @@ extension Dealer {
         let points = player.points.valid
         var stringReprOfPoint: String
         if points.isEmpty {
-            stringReprOfPoint = "more than 21 points"
+            stringReprOfPoint = "\(player.points.best) points"
         } else {
             stringReprOfPoint = points.description
         }
@@ -87,7 +91,7 @@ extension Dealer {
             // has cards on hand, but no valid combinations - bust
             return true
         } else {
-            return points.best! >= 17
+            return points.best >= 17
         }
     }
 }

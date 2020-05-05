@@ -18,7 +18,7 @@ extension Game {
         while true {
             print("-- NEW ROUND --")
             playRound()
-            print("Press any key for new round...")
+            print("Press enter for new round...")
             _ = readLine()
         }
     }
@@ -34,64 +34,80 @@ extension Game {
         */
         
         defer {
+            // *Drum roll* - see who wins!
+            handleEndRound(for: p1)
             // Clear the table at the end of turn
             p1.cards.removeAll()
             house.cards.removeAll()
         }
         
-        
         // use an array of players to loop through for multiplayer ver.
         house.deal(2, to: p1)
         house.draw(2)
-
-        while readAction() == .hit {
+        
+        loop: while readAction() == .hit {
             house.deal(1, to: p1)
+            
             switch p1.points.best {
             case 21:
                 print("BLACKJACK!")
-                // TODO check what to do
-                break
-            case nil:
+                // can't get a better score, so we break
+                break loop
+            case 21...:
                 print("Bust!")
-                handleLostRound(losing: p1)
-                return
+                // player lost, so we break
+                break loop
             default:
+                // in any other case we iterate
                 break
             }
         }
         
+        // if all the players are bust, house doesn't draw
+        guard !p1.isBust else { return }
+        
         while !house.reachedStoppingCondition() {
             house.draw()
-        }
-        
-        // Compare and see who wins
-        
-        // Check for bust
-        guard let housePoints = house.points.best else { return handleWonRound(winning: p1)}
-        guard let playerPoints = p1.points.best else { return handleLostRound(losing: p1)}
-        
-        // Check other cases
-        switch playerPoints.compare(to: housePoints) {
-        case .greater:
-            handleWonRound(winning: p1)
-        case .equal:
-            handleDraw(drawing: p1)
-        case .less:
-            handleLostRound(losing: p1)
         }
     }
     
     //MARK: - Handle round
-    func handleLostRound(losing player: CanPlay) {
-        print("Lost!")
+    /// Outcome from players' perspective
+    enum Outcome {
+        case win, loss, draw
     }
     
-    func handleWonRound(winning player: CanPlay) {
-        print("Won!")
+    /// Handles end of round depending on the player's points vs house's.
+    func handleEndRound(for player: CanPlay) {
+        var outcome: Outcome
+        defer { handleOutcome(outcome, for: player) }
+        
+        // if house or player is bust, no point in comparing scores
+        guard !house.isBust, !player.isBust else {
+            outcome = player.isBust ? .loss : .win
+            return
+        }
+        
+        switch player.points.best.compare(to: house.points.best) {
+        case .greater:
+            outcome = .win
+        case .equal:
+            outcome = .draw
+        case .less:
+            outcome = .loss
+        }
     }
     
-    func handleDraw(drawing player: CanPlay) {
-        print("Draw!")
+    func handleOutcome(_ outcome: Outcome, for player: CanPlay) {
+        //TODO: Implement
+        switch outcome {
+        case .draw:
+            print("Draw!")
+        case .win:
+            print("Win!")
+        case .loss:
+            print("Loss!")
+        }
     }
 }
 

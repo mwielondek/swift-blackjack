@@ -48,7 +48,7 @@ class Dealer: CanPlay {
     var name: String = "The house"
     var cash: Double = 10000
     var cards: Cards = []
-    @InfiniteDeck var deck: Cards
+    var deck: InfiniteDeck = InfiniteDeck()
 }
 
 extension Dealer {
@@ -61,11 +61,8 @@ extension Dealer {
     func deal(_ amount: Int, to player: CanPlay) {
         print("* Dealing \(amount) cards to \(player.name)")
         
-        // note: we must use deck.popLast instead of eg prefix for
-        // the infinite dock not to run risk of potentially producing
-        // an index out of range error.
         for _ in 0..<amount {
-            let drawnCard = deck.popLast()!
+            let drawnCard = deck.next()!
             player.receive(card: drawnCard)
             print("Got \(drawnCard)")
         }

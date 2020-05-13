@@ -128,19 +128,24 @@ extension Game {
     }
 }
 
-/// An array of 52 standard playing cards that automatically refills and shuffles when empty.
-@propertyWrapper
-struct InfiniteDeck {
-    var deck: Cards = []
-    var wrappedValue: Cards {
-        mutating get {
-            if deck.isEmpty {
-                deck = Game.createNewDeck().shuffled()
-            }
-            return deck
-        }
-        set {
-            deck = newValue
+/// A deck consisting of 52 standard playing cards that automatically reshuffles when empty.
+struct InfiniteDeck: Sequence, IteratorProtocol {
+    typealias Element = Card
+    
+    let cards = Game.createNewDeck().shuffled()
+    var iterator: IndexingIterator<[Element]>
+    
+    init() {
+        iterator = cards.makeIterator()
+    }
+    
+    mutating func next() -> Card? {
+        if let next = iterator.next() {
+            return next
+        } else {
+            // we have run through the entire deck, reshuffle
+            iterator = cards.shuffled().makeIterator()
+            return iterator.next()
         }
     }
 }

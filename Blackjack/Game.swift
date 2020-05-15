@@ -78,7 +78,7 @@ extension Game {
     }
     
     /// Handles end of round depending on the player's points vs house's.
-    func handleEndRound(for player: CanPlay) {
+    func handleEndRound(for player: Player) {
         var outcome: Outcome
         defer { handleOutcome(outcome, for: player) }
         
@@ -98,7 +98,7 @@ extension Game {
         }
     }
     
-    func handleOutcome(_ outcome: Outcome, for player: CanPlay) {
+    func handleOutcome(_ outcome: Outcome, for player: Player) {
         //TODO: Implement
         switch outcome {
         case .draw:

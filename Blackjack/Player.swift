@@ -7,22 +7,12 @@
 //
 
 //MARK: - Protocols
-protocol CanPlay: HasCards, CustomStringConvertible {
+protocol PlayerEntity: AnyObject {
     var name: String { get }
-    var cash: Double { get set }
-}
-
-extension CanPlay {
-    var description: String {
-        return "\(name) (holds \(cards.count) cards)"
-    }
-}
-
-protocol HasCards: AnyObject {
     var cards: Cards { get set }
 }
 
-extension HasCards {
+extension PlayerEntity {
     var points: Points {
         let pointValues = cards.map { $0.pointValue }
         return Points(pointsArray: pointValues)
@@ -38,13 +28,13 @@ extension HasCards {
 }
 
 //MARK: - Players
-class Player: CanPlay {
+class Player: PlayerEntity {
     var name: String = "Player"
     var cash: Double = 100
     var cards: Cards = []
 }
 
-class Dealer: CanPlay {
+class Dealer: PlayerEntity {
     var name: String = "The house"
     var cash: Double = 10000
     var cards: Cards = []
@@ -58,7 +48,7 @@ extension Dealer {
         - amount: number of cards
         - to: receiving player
      */
-    func deal(_ amount: Int, to player: CanPlay) {
+    func deal(_ amount: Int, to player: PlayerEntity) {
         print("* Dealing \(amount) cards to \(player.name)")
         
         for _ in 0..<amount {

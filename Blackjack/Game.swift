@@ -12,18 +12,26 @@ class Game {
 }
 
 extension Game {
+    enum GameError: Error {
+        case playersBroke
+    }
+    
     func play() {
         // add betting rules here, where running out of
         // cash would be the stopping cond.
         while true {
             print("-- NEW ROUND --")
-            playRound()
+            do {
+                try playRound()
+            } catch {
+                return
+            }
             print("Press enter for new round...")
             _ = readLine()
         }
     }
     
-    func playRound() {
+    func playRound() throws {
         /*
          Logic in short:
           1. players draw two cards
@@ -33,12 +41,14 @@ extension Game {
           5. check who won
         */
         
-        defer {
-            // *Drum roll* - see who wins!
-            handleEndRound(for: p1)
-            // Clear the table at the end of turn
-            p1.cards.removeAll()
-            house.cards.removeAll()
+        while true {
+            do {
+                let bet = readBet(showing: p1.cash)
+                try p1.placeBet(of: bet)
+                break
+            } catch BettingError.insufficientCash {
+                print("You don't have that many monies, sorry buddy")
+            }
         }
         
         // use an array of players to loop through for multiplayer ver.
@@ -64,11 +74,18 @@ extension Game {
         }
         
         // if all the players are bust, house doesn't draw
-        guard !p1.isBust else { return }
-        
-        while !house.reachedStoppingCondition() {
-            house.draw()
+        if !p1.isBust {
+            while !house.reachedStoppingCondition() {
+                house.draw()
+            }
         }
+        
+        // *Drum roll* - see who wins!
+        try handleEndRound(for: p1)
+        
+        // Clear the table at the end of turn
+        p1.cards.removeAll()
+        house.cards.removeAll()
     }
     
     //MARK: - Handle round
@@ -78,36 +95,51 @@ extension Game {
     }
     
     /// Handles end of round depending on the player's points vs house's.
-    func handleEndRound(for player: Player) {
+    func handleEndRound(for player: Player) throws {
         var outcome: Outcome
-        defer { handleOutcome(outcome, for: player) }
         
         // if house or player is bust, no point in comparing scores
-        guard !house.isBust, !player.isBust else {
+        if house.isBust || player.isBust {
             outcome = player.isBust ? .loss : .win
-            return
+        } else {
+            switch player.points.best.compare(to: house.points.best) {
+            case .greater:
+                outcome = .win
+            case .equal:
+                outcome = .draw
+            case .less:
+                outcome = .loss
+            }
         }
         
-        switch player.points.best.compare(to: house.points.best) {
-        case .greater:
-            outcome = .win
-        case .equal:
-            outcome = .draw
-        case .less:
-            outcome = .loss
-        }
+        try handleOutcome(outcome, for: player)
     }
     
-    func handleOutcome(_ outcome: Outcome, for player: Player) {
+    func handleOutcome(_ outcome: Outcome, for player: Player) throws {
         //TODO: Implement
         switch outcome {
         case .draw:
             print("Draw!")
+            player.cash += player.currentBet
         case .win:
             print("Win!")
+            do {
+                try house.payOut(to: player)
+            } catch BettingError.insufficientCash {
+                print("You broke the house!!!")
+                throw GameError.playersBroke
+            } catch {
+                fatalError()
+            }
         case .loss:
             print("Loss!")
+            if player.cash == 0 {
+                print("You're bust! :(")
+                throw GameError.playersBroke
+            }
         }
+        
+        player.currentBet = 0
     }
 }
 
@@ -135,6 +167,15 @@ extension Game {
             }
         }
         return action!
+    }
+    
+    func readBet(showing currentCash: Cash) -> Cash {
+        print("Place a bet (you have \(currentCash)):\n>>> ", terminator: "")
+        while true {
+            if let input = readLine(), let cash = Cash(input) {
+                return cash
+            }
+        }
     }
 }
 

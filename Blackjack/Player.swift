@@ -7,9 +7,11 @@
 //
 
 //MARK: - Protocols
+typealias Cash = Double
 protocol PlayerEntity: AnyObject {
     var name: String { get }
     var cards: Cards { get set }
+    var cash: Cash { get set }
 }
 
 extension PlayerEntity {
@@ -28,15 +30,31 @@ extension PlayerEntity {
 }
 
 //MARK: - Players
+enum BettingError: Error {
+    case insufficientCash
+}
+
 class Player: PlayerEntity {
     var name: String = "Player"
-    var cash: Double = 100
+    var cash: Cash = 100
     var cards: Cards = []
+    var currentBet: Cash = 0
+}
+
+extension Player {
+    /// Takes cash from player and returns it (or nil if not enough cash).
+    func placeBet(of amount: Cash) throws {
+        guard !cash.isLess(than: amount) else {
+            throw BettingError.insufficientCash
+        }
+        cash -= amount
+        currentBet = amount
+    }
 }
 
 class Dealer: PlayerEntity {
     var name: String = "The house"
-    var cash: Double = 10000
+    var cash: Cash = 1000
     var cards: Cards = []
     var deck: InfiniteDeck = InfiniteDeck()
 }
@@ -64,7 +82,8 @@ extension Dealer {
         } else {
             stringReprOfPoint = points.description
         }
-        print("\(player.name) now holds \(player.cards.count) cards worth \(stringReprOfPoint)")
+        print("\(player.name) now holds \(player.cards.count) cards" +
+            "worth \(stringReprOfPoint)")
     }
     
     /// Deal cards to the dealer.
@@ -81,5 +100,16 @@ extension Dealer {
         } else {
             return points.best >= 17
         }
+    }
+    
+    /// Pay out bets to players
+    func payOut(to player: Player) throws {
+        let bet = player.currentBet
+        guard bet < cash else {
+            throw BettingError.insufficientCash
+        }
+        cash -= bet
+        player.cash += bet * 2
+        print("* Paying out \(bet) to \(player.name)")
     }
 }

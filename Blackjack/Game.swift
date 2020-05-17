@@ -133,6 +133,7 @@ extension Game {
             }
         case .loss:
             print("Loss!")
+            house.cash += player.currentBet
             if player.cash == 0 {
                 print("You're bust! :(")
                 throw GameError.playersBroke
